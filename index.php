@@ -344,11 +344,18 @@ if ($text == "") {
 
     $database = new Model();
 
-    $elections = $database->getCampaignElection( (int) $election );
+    $campaigns = $database->getCampaignElection( (int) $election );
 
-    if ( $elections )
+    $elections = $database->getElection( $election );
+
+    if ( $campaigns && $elections )
     {
-        
+        $response = "CON MiVote Running Campaigns for ".$elections['name']."\n";
+
+        foreach( $campaigns as $campaign )
+        {
+            $response .= $campaign['id'].". ".$campaign['name']."\n";
+        }
     }
 }
 
