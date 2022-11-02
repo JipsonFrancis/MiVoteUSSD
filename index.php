@@ -29,6 +29,10 @@ if ( ( $size == 3 || $size >= 3 ) )
         $election = $response_elements[2]
     ;
 
+    if ( $response_elements[0] == "1" && $response_elements[1] == "4" )
+    $election = $response_elements[2]
+    ;
+
     if ( $response_elements[0] == "1" && $response_elements[1] == "5" )
     $election = $response_elements[2]
     ;
@@ -350,13 +354,33 @@ if ($text == "") {
 
     if ( $campaigns && $elections )
     {
-        $response = "CON MiVote Running Campaigns for ".$elections['name']."\n";
+        $response = "END MiVote Running Campaigns for ".$elections['name']."\n";
 
         foreach( $campaigns as $campaign )
         {
             $response .= $campaign['id'].". ".$campaign['name']."\n";
         }
     }
+
+}else if ( $text == "1*4*".$election ){
+
+    // we have to order the campaigns according to posistions and then divide them in to submenus the user can just select one and vote
+    $database = new Model();
+
+    $campaigns = $database->getCampaignElection( (int) $election );
+
+    $elections = $database->getElection( $election );
+
+    if ( $campaigns && $elections )
+    {
+        $response = "CON MiVote Voting Menu \n";
+
+        foreach( $campaigns as $campaign )
+        {
+            $response .= $campaign['id'].". ".$campaign['name']."\n";
+        }
+    }
+
 }
 
 // Echo the response back to the API
