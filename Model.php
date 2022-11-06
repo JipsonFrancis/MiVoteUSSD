@@ -182,6 +182,44 @@ class Model
         return $data;
     }
 
+    // election user
+    // public function createUserElection ( int $elections_id , int $users_id, ?string $name='electrol' ) : string
+    // {
+    //     $sql = "INSERT INTO `candidate_elections` ( `name`,`election_id`, `user_id` )
+    //             VALUES ( :name, :elections_id, :users_id )";
+
+    //     $stmt = $this->connection->prepare( $sql );
+
+    //     $stmt->bindValue( 'elections_id', $elections_id, PDO::PARAM_INT );
+    //     $stmt->bindValue( 'users_id', $users_id, PDO::PARAM_INT );
+    //     $stmt->bindValue( 'name', $name, PDO::PARAM_STR );
+
+    //     $stmt->execute();
+
+    //     return $this->connection->lastInsertId();
+    // }
+
+    public function checkVoteStatus ( int $users_id, int $election_id ) : array | false
+    {
+        $data = [];
+
+        $sql = "SELECT * FROM `election_users` WHERE (`user_id` = :id AND `election_id` = :eid )";
+
+        $stmt = $this->connection->prepare( $sql );
+
+        $stmt->bindValue( 'id', $users_id, PDO::PARAM_INT );
+        $stmt->bindValue( 'eid', $election_id, PDO::PARAM_INT );
+
+        $stmt->execute();
+
+        while( $row = $stmt->fetchAll( PDO::FETCH_ASSOC ) )
+        {
+            $data = $row;
+        }
+
+        return $data;
+    }
+
     // campaign tables
 
     public function createCampaign( int $elections_id, int $users_id , ?string $name='campaign' ): string
@@ -251,5 +289,43 @@ class Model
         $stmt->execute();
 
         return $stmt->rowCount();
+    }
+
+    // Vote Table
+
+    public function createVote( int $users_id, int $election_id, int $campaign_id ): string
+    {
+        $sql = "INSERT INTO `votes` (`user_id`,`election_id`,`campaign_id`) VALUES (:user_id, :election_id, :campaign_id)";
+
+        $stmt = $this->connection->prepare( $sql );
+
+        $stmt->bindValue( 'user_id', $users_id, PDO::PARAM_INT);
+        $stmt->bindValue( 'election_id', $election_id, PDO::PARAM_INT);
+        $stmt->bindValue( 'campaign_id', $campaign_id, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        return $this->connection->lastInsertId();
+    }
+
+    public function checkVote( int $user_id, int $election_id, int $campaign_id ): array|false
+    {
+        $data = [];
+
+        $sql = "SELECT * FROM `votes` WHERE ( `user_id` = :uid AND  `election_id` = :eid AND `campaign_id` = :cid)";
+
+        $stmt = $this->connection->prepare( $sql );
+
+        $stmt->bindValue( 'uid', $user_id ,PDO::PARAM_INT );
+        $stmt->bindValue( 'eid', $election_id ,PDO::PARAM_INT );
+        $stmt->bindValue( 'cid', $campaign_id ,PDO::PARAM_INT );
+
+        $stmt->execute();
+
+        while( $row = $stmt->fetchAll( PDO::FETCH_ASSOC ) )
+            $data = $row
+        ;
+
+        return $data;
     }
 }

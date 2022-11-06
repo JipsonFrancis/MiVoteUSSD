@@ -19,7 +19,7 @@ $response_elements = explode('*', $text );
 
 $size = sizeof( $response_elements );
 
-if ( ( $size == 3 || $size >= 3 ) )
+if ( ( $size == 3 || $size > 3 ) )
 {
     if ( $response_elements[0] == "1" && $response_elements[1] == "2" )
         $name = $response_elements[2]
@@ -52,13 +52,18 @@ if ( ( $size == 3 || $size >= 3 ) )
     
 }
 
-if ( ( $size == 4 || $size >= 4 ) )
+if ( ( $size == 4 || $size > 4 ) )
 {   
     if ( $response_elements[0] == '1' && $response_elements[1] == '2' )
-        $email = $response_elements[3];
+        $email = $response_elements[3]
+    ;
+
+    if ( $response_elements[0] == "1" && $response_elements[1] == "4" ){
+        $campaign = $response_elements[3];
+    }
 }
 
-if ( ( $size == 5 || $size >= 5 ) )
+if ( ( $size == 5 || $size > 5 ) )
 {
     if ( $response_elements[0] == "1" && $response_elements[1] == "2" )
         $password = $response_elements[4];
@@ -172,16 +177,34 @@ if ($text == "") {
 
         if ( $userElections )
         {
-            $response = "CON Select Elections (to Start Vote) \n \n";
-
             foreach ( $userElections as $userElection )
             {
                 $election = $database->getElection( $userElection['election_id'] );
 
-                if ( $election )
+                $today = date_create( date( 'Y-m-d' ) );
+
+                $voting_date = date_create( $election['voting_date'] );
+
+                $date_diff = date_diff( $today, $voting_date );
+                $date_diff = (int)$date_diff->format("%R%a");
+
+                // fwrite( $dae = fopen( 'date.txt', 'a' ),  $date_diff );
+
+                // fclose( $dae );
+
+                if ( $election && $date_diff == 0 )
                 {
+                    $response = "CON Select Elections (to Start Vote) \n \n";
                     //limit the output and make a next page
                     $response .= $userElection['election_id'].". ".$election['name']." \n";
+                }
+                elseif( $date_diff < 0 )
+                {
+                    $response = "END Election is closed \n";
+                }
+                elseif( $date_diff > 0 )
+                {
+                    $response = "END Election will be available on ".$election['voting_date']."\n";
                 }
             }
         }
@@ -376,7 +399,7 @@ if ($text == "") {
         }
     }
 
-}else if ( $text == "1*4*".$election ){
+} else if ( $text == "1*4*".$election ){
 
     // we have to order the campaigns according to posistions and then divide them in to submenus the user can just select one and vote
     $database = new Model();
@@ -394,7 +417,24 @@ if ($text == "") {
             $response .= $campaign['id'].". ".$campaign['name']."\n";
         }
     }
+} else if ( $text == "1*4*".$election."*".$campaign ){
 
+    $dataModel = new Model();
+
+    $user = $dataModel->get( $phoneNumber );
+
+    $voted = $dataModel->checkVote( $user['id'], $election, $campaign );
+    $votingStat = $dataModel->checkVoteStatus( $user['id'], $election );
+
+    if ( count( $votingStat ) == 1 && count( $voted ) == 0 )
+    {
+        $dataModel->createVote( $user['id'], $election, $campaign );
+        $response = "END Thanks for voting";
+    }
+    else
+    {
+        $response = "END You have already voted!";
+    }
 }
 
 // Echo the response back to the API

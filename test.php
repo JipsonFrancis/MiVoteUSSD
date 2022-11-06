@@ -10,4 +10,6 @@ $user = $database->get('+265884202666');
 
 $cam = $database->getCampaign( $user['id']);
 
-echo json_encode( $cam );
+$data = $database->checkVote( 4,2,2 );
+
+echo json_encode( count($data) );

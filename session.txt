@@ -45,3 +45,4 @@
 ["ATUid_a8442668abf14bb706afe2ea940b99cb","*384*24918#","99999","+265884202666","1*2*kingson*kins@gmail.com*123456789","kingson","kins@gmail.com","$2y$10$81.MfCYEpHWHGBbot.si0OQXCOdOucPxANKXexD6Q.d6FC0wNzPT2"]
 ["ATUid_7f90eff3921e136dd77089420fd3c80c","*384*24918#","99999","+265884202666","1*2*kings*kings@gmail.com*0833126198","kings","kings@gmail.com","$2y$10$D7L1XYhxv5GoTkDUmx8lN.EXGYvuNj\/jIMMnwA2M.M.DAUzMFORCm"]
 ["ATUid_7ffe1e280c7b973544052a3d3571f8ba","*384*24918#","99999","+265884202666","1*2*kingsley*kings@gmail.com*0833126198","kingsley","kings@gmail.com","$2y$10$i42pwaX5M5uk3kRnPURt0O7YjUmkgtDy3TERd65wqkWltDKozpMQS"]
+["ATUid_96d22c3ad7e493965e75d5ffe4aa92ca","*384*24918#","99999","+265991156338","1*2*jipson*jip@gmail.com*0833126198","jipson","jip@gmail.com","$2y$10$FLumZYJAATE2T7.kVlVTNOEkUH.LD3cOmoy945ZZOLVM9Ed5OS.k6"]
