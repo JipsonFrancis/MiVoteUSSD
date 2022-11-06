@@ -31,7 +31,7 @@ class Model
         $stmt->bindValue(':phone', $phone, PDO::PARAM_STR);
         $stmt->bindValue(':email', $email, PDO::PARAM_STR);
         $stmt->bindValue(':password', password_hash( $password, PASSWORD_BCRYPT ), PDO::PARAM_STR);
-        $stmt->bindValue(':voting_status', $voting, PDO::PARAM_BOOL );
+        $stmt->bindValue(':voting_status', $voting, PDO::PARAM_STR );
 
         $stmt->execute();
 
@@ -67,8 +67,8 @@ class Model
         $stmt->bindValue('phone', $data['phone'] ?? $current['phone'],  PDO::PARAM_STR );
         $stmt->bindValue('email', $data['email'] ?? $current['email'],  PDO::PARAM_STR );
         $stmt->bindValue('code', $data['password'] ?? $current['password'],  PDO::PARAM_STR );
-        $stmt->bindValue('vs', $data['voting_status'] ?? $current['voting_status'],  PDO::PARAM_BOOL);
-        $stmt->bindValue('ro', $data['running_office'] ?? $current['running_office'],  PDO::PARAM_BOOL);
+        $stmt->bindValue('vs', $data['voting_status'] ?? $current['voting_status'],  PDO::PARAM_STR);
+        $stmt->bindValue('ro', $data['running_office'] ?? $current['running_office'],  PDO::PARAM_STR);
         $stmt->bindValue('id', $current['id'] , PDO::PARAM_INT);
 
         $stmt->execute();
@@ -112,7 +112,7 @@ class Model
     // voter election tables
     public function createUserElection ( int $elections_id , int $users_id) : string
     {
-        $sql = "INSERT INTO `elections_users` ( `elections_id`, `users_id` )
+        $sql = "INSERT INTO `election_users` ( `election_id`, `user_id` )
                 VALUES ( :elections_id, :users_id )";
 
         $stmt = $this->connection->prepare( $sql );
@@ -129,7 +129,7 @@ class Model
     {
         $data = [];
 
-        $sql = "SELECT * FROM `elections_users` WHERE (`users_id` = :id)";
+        $sql = "SELECT * FROM `election_users` WHERE ( `user_id` = :id )";
 
         $stmt = $this->connection->prepare( $sql );
 
@@ -148,7 +148,7 @@ class Model
     // candidate elections tables 
     public function createCanElection ( int $elections_id , int $users_id, ?string $name='electrol' ) : string
     {
-        $sql = "INSERT INTO `candidates_elections` ( `name`,`elections_id`, `users_id` )
+        $sql = "INSERT INTO `candidate_elections` ( `name`,`election_id`, `user_id` )
                 VALUES ( :name, :elections_id, :users_id )";
 
         $stmt = $this->connection->prepare( $sql );
@@ -166,7 +166,7 @@ class Model
     {
         $data = [];
 
-        $sql = "SELECT * FROM `candidates_elections` WHERE (`users_id` = :id)";
+        $sql = "SELECT * FROM `candidate_elections` WHERE (`user_id` = :id)";
 
         $stmt = $this->connection->prepare( $sql );
 
@@ -186,7 +186,7 @@ class Model
 
     public function createCampaign( int $elections_id, int $users_id , ?string $name='campaign' ): string
     {
-        $sql = "INSERT INTO `campaigns` ( `name`,`elections_id`, `users_id` )
+        $sql = "INSERT INTO `campaigns` ( `name`,`election_id`, `user_id` )
         VALUES ( :name, :elections_id, :users_id)";
 
         $stmt = $this->connection->prepare( $sql );
@@ -204,7 +204,7 @@ class Model
     {
         $data = [];
 
-        $sql = "SELECT * FROM `campaigns` WHERE (`users_id` = :id)";
+        $sql = "SELECT * FROM `campaigns` WHERE (`user_id` = :id)";
 
         $stmt = $this->connection->prepare( $sql );
 
@@ -224,7 +224,7 @@ class Model
     {
         $data = [];
 
-        $sql = "SELECT * FROM `campaigns` WHERE (`elections_id` = :id)";
+        $sql = "SELECT * FROM `campaigns` WHERE (`election_id` = :id)";
 
         $stmt = $this->connection->prepare( $sql );
 

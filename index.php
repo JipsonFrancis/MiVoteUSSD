@@ -101,7 +101,12 @@ if ($text == "") {
 
     $user = $dataModel->get( $phoneNumber );
 
-    $response = ( (bool) $user['voting_status'] )? "END Your Eligible To Vote" : "END Your not Eligible to Vote(Please Register)";
+    if ( $user )
+        $response = ( (bool) $user['voting_status'] )? "END Your Eligible To Vote" : "END Your not Eligible to Vote(Please Register)"
+    ;
+    else
+        $response = "END Your not Registered";
+    ;
 
 } else if ( $text == "1*2" ){
     $response = "CON Enter Your Name\n";
@@ -121,6 +126,7 @@ if ($text == "") {
     fwrite( $log = fopen( 'session.txt', 'a'), "\n" );
 
     fclose( $log );
+
 } else if ( $text == "1*3" ){
     $dataModel = new Model();
 
@@ -170,14 +176,18 @@ if ($text == "") {
 
             foreach ( $userElections as $userElection )
             {
-                $election = $database->getElection( $userElection['elections_id'] );
+                $election = $database->getElection( $userElection['election_id'] );
 
                 if ( $election )
                 {
                     //limit the output and make a next page
-                    $response .= $userElection['elections_id'].". ".$election['name']." \n";
+                    $response .= $userElection['election_id'].". ".$election['name']." \n";
                 }
             }
+        }
+        else
+        {
+            $response = "END Please Register For Election first (go back and select 3) \n \n";
         }
     }
 
@@ -198,12 +208,12 @@ if ($text == "") {
 
             foreach ( $userElections as $userElection )
             {
-                $election = $database->getElection( $userElection['elections_id'] );
+                $election = $database->getElection( $userElection['election_id'] );
 
                 if ( $election )
                 {
                     //limit the output and make a next page
-                    $response .= $userElection['elections_id'].". ".$election['name']." \n";
+                    $response .= $userElection['election_id'].". ".$election['name']." \n";
                 }
             }
         }
@@ -247,7 +257,7 @@ if ($text == "") {
 
             foreach( $campaigns as $campaign )
             {
-                $election = $database->getElection( $campaign['elections_id'] );
+                $election = $database->getElection( $campaign['election_id'] );
 
                 if ( $election )
                 {
@@ -257,6 +267,10 @@ if ($text == "") {
                     $response .= "Elections does not exsit\n";
                 }
             }
+        }
+        else
+        {
+            $response = "END You dont have any Campaigns Yet (go back and select oprion 3 to create) \n";
         }
     }
 } else if ( $text == '2*3' ){
@@ -276,7 +290,7 @@ if ($text == "") {
 
             foreach ( $elections as $election )
             {
-                $response .= $election['elections_id'].". ".$election['name']." \n";
+                $response .= $election['election_id'].". ".$election['name']." \n";
             }
         }
     }
@@ -315,7 +329,7 @@ if ($text == "") {
     {
         $database->createCanElection( $election, $user['id'] );
 
-        $database->updateUser( $user, [ 'running_office' => true ] );
+        $database->updateUser( $user, [ 'running_office' => "1" ] );
 
         $response = "END Now Candidate for ".$electrol['name']."\n";
     }
