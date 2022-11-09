@@ -14,6 +14,8 @@ $email = null;
 $password = null;
 $election = null;
 $campaign = null;
+$position = null;
+$entity = null;
 
 $response_elements = explode('*', $text );
 
@@ -58,22 +60,30 @@ if ( ( $size == 4 || $size > 4 ) )
         $email = $response_elements[3]
     ;
 
-    if ( $response_elements[0] == "1" && $response_elements[1] == "4" ){
-        $campaign = $response_elements[3];
-    }
+    if ( $response_elements[0] == "1" && $response_elements[1] == "4" )
+        $entity = $response_elements[3]
+    ;
+
+    if ( $response_elements[0] == "2" && $response_elements[1] == "3" )
+        $position = $response_elements[3]
+    ;
+    
 }
 
 if ( ( $size == 5 || $size > 5 ) )
 {
     if ( $response_elements[0] == "1" && $response_elements[1] == "2" )
-        $password = $response_elements[4];
-}
+        $password = $response_elements[4]
+    ;
 
+    if ( $response_elements[0] == "1" && $response_elements[1] == "4" )
+        $campaign = $response_elements[4]
+    ;
+}
 
 fwrite( $res = fopen( 'response.txt', 'a' ), json_encode(array( $name, $email, $password , $text, $election) ) );
 
 fclose( $res );
-
 
 if ($text == "") {
     // This is the first request. Note how we start the response with CON
@@ -350,7 +360,7 @@ if ($text == "") {
 
     if ( $user && $electrol )
     {
-        $database->createCanElection( $election, $user['id'] );
+        $database->createCanElection( $election, $user['id'], $electrol['name'] );
 
         $database->updateUser( $user, [ 'running_office' => "1" ] );
 
@@ -361,15 +371,69 @@ if ($text == "") {
 
     $database = new Model();
 
+    $electrol = $database->getElection( $election );
+
+    if ( $electrol )
+    {
+        $electrol_positions = $database->getPositions( $electrol['electrol_position_id'] );
+
+        if ( $electrol_positions )
+        {
+            $response = "CON (Type) the positions you viaing for, e.g king \n \n";
+
+            foreach( json_decode( $electrol_positions[0]['electrol_positions'] ) as $electrol_position )
+            {
+                $response .= $electrol_position." \n";
+
+            }
+        }
+        else
+        {
+            $response = "END Election that was Selected does not Exist";
+        }
+    }
+    else
+    {
+        $response = "END Election that was Selected does not Exist";
+    }
+
+} else if ( $text == "2*3*".$election."*".$position ){
+
+    $database = new Model();
+
     //get user id
     $user = $database->get( $phoneNumber );
     $electrol = $database->getElection( $election );
 
     if ( $user && $electrol)
     {
-        $database->createCampaign( $election, $user['id'] );
+        // JUST CHECKING TO SEE IF THE USER ENTER CORRECT DATA
+        $election_positions = $database->getPositions( $electrol['electrol_position_id'] );
+        $datum = json_decode($election_positions[0]['electrol_positions']) ;
 
-        $response = "END Campaign Created for ".$electrol['name']."\n";
+        if ( $election_positions && in_array( $position, $datum ))
+        {
+            $strict = $database->checkCampaign( $user['id'], $electrol['id'], $electrol['electrol_position_id'], $electrol['strict'] );
+
+            if ( (!$strict && $electrol['strict']) || (!$electrol['strict'] && $strict) || ( $electrol['strict'] == false && !$strict ))
+            {
+                $database->createCampaign( $election, $user['id'], $electrol['electrol_position_id'], $position );
+
+                $response = "END Campaign Created for ".$electrol['name']."\n";
+            }
+            else
+            {
+                $response = "END Cannot Create two Campaigns for ".$electrol['name']." election \n";
+            }
+        }
+        else
+        {
+            $response = "END THE Entity youve enter does not exit";
+        }
+    }
+    else
+    {
+        $response = "END USER AMD THE ELECTION DONT EXIST";
     }
 
 } else if ( $text == "2*4*".$campaign ){
@@ -404,36 +468,145 @@ if ($text == "") {
     // we have to order the campaigns according to posistions and then divide them in to submenus the user can just select one and vote
     $database = new Model();
 
-    $campaigns = $database->getCampaignElection( (int) $election );
+    $election = $database->getElection( $election );
 
-    $elections = $database->getElection( $election );
-
-    if ( $campaigns && $elections )
+    if ( $election )
     {
-        $response = "CON MiVote Voting Menu \n";
+        $loop = 1;
+        // electrol positions id 
+        $electrol_position_id = $election['electrol_position_id'];
 
-        foreach( $campaigns as $campaign )
+        $election_positions = $database->getPositions( $electrol_position_id );
+
+        $positions = json_decode($election_positions[0]['electrol_positions']);
+
+        $response = "CON MiVote ".$election['name']." Voting Entity Menu (Type Entity e.g king)\n";
+
+        foreach( $positions as $position )
         {
-            $response .= $campaign['id'].". ".$campaign['name']."\n";
+            $response .= $loop.". ".$position."\n";
+            $loop++;
         }
     }
-} else if ( $text == "1*4*".$election."*".$campaign ){
 
-    $dataModel = new Model();
+} else if ( $text == "1*4*".$election."*".$entity ){
 
-    $user = $dataModel->get( $phoneNumber );
+    $database = new Model();
 
-    $voted = $dataModel->checkVote( $user['id'], $election, $campaign );
-    $votingStat = $dataModel->checkVoteStatus( $user['id'], $election );
+    $election = $database->getElection( $election );
 
-    if ( count( $votingStat ) == 1 && count( $voted ) == 0 )
+    if ( $election )
     {
-        $dataModel->createVote( $user['id'], $election, $campaign );
-        $response = "END Thanks for voting";
+        $campaigns = $database->getCampaignElection( $election['id'] );
+
+        if ( $campaigns )
+        {
+            $response = "CON Vote for the Campaign of Your Choice \n";
+            foreach( $campaigns as $campaign )
+            {
+                if ( $campaign['name'] == $entity )
+                    $response .= $campaign['id'].". ".$campaign['name']."\n"
+                ;
+            }
+        }
+        else
+        {
+            $response = "END NO CAMPAINGS AVAILABLE FOR THIS ENTITY.";
+        }
     }
-    else
+
+} else if ( $text == "1*4*".$election."*".$entity."*".$campaign ){
+
+    $database = new Model();
+
+    $flagged = false;
+
+    $user = $database->get( $phoneNumber );
+
+    $election = $database->getElection( $election );
+
+    $campaign = $database->getCampaignID( $campaign );
+
+    $today = date_create( date( 'Y-m-d' ) );
+
+    $election_day = date_create( $election['voting_date'] );
+
+    $date_diff = date_diff( $today, $election_day );
+
+    if ( (int)$date_diff->format("%R%a") == 0 )
     {
-        $response = "END You have already voted!";
+        if ( $user && $election && $campaign)
+        {
+    
+            $voted = $database->getUserVotes( $user['id'], $election['id'] );
+    
+            if ( $voted )
+            {
+                foreach( $voted as $vote )
+                {
+                    $votedCampaign = $database->getCampaignID( $vote['campaign_id'] );
+    
+                    if ( $campaign['name'] == $votedCampaign['name'] )
+                    {
+                        $flagged = true;
+                        break;
+                    }
+                }
+    
+                if ( $flagged )
+                {
+                    $response = "END You cannot vote Twice for ".$campaign['name']." Position";
+                }
+                else
+                {
+                    $votedCampaign = $database->checkVote( $user['id'], $election['id'], $campaign['id'] );
+    
+                    $votingStat = $database->checkVoteStatus( $user['id'], $election['id'] );
+        
+                    if ( !$votedCampaign && $votingStat )
+                    {
+                        $Mivote = $database->createVote( $user['id'], $election['id'], $campaign['id'] );
+        
+                        $response = "END Thanks for voting";
+                    }
+                    else
+                    {
+                        $response = "END issues ocured";
+                    }
+                }
+            }
+            else 
+            {
+    
+                $votedCampaign = $database->checkVote( $user['id'], $election['id'], $campaign['id'] );
+    
+                $votingStat = $database->checkVoteStatus( $user['id'], $election['id'] );
+    
+                if ( !$votedCampaign && $votingStat )
+                {
+                    $Mivote = $database->createVote( $user['id'], $election['id'], $campaign['id'] );
+    
+                    $response = "END Thanks for voting";
+    
+                }
+                else
+                {
+                    $response = "END issues ocured";
+                }
+            }
+        }
+        else
+        {
+            $response = "END User || Election || Campaign issues";
+        }
+    }
+    else if ( (int)$date_diff->format("%R%a") < 0 )
+    {
+        $response = "END Elections closed ".(int)$date_diff->format("%R%a")."days ago ";
+    }
+    else 
+    {
+        $response = "Elections day has not yet began!, Beginning in ".(int)$date_diff->format("%R%a days");
     }
 }
 

@@ -183,6 +183,7 @@ class Model
     }
 
     // election user
+
     // public function createUserElection ( int $elections_id , int $users_id, ?string $name='electrol' ) : string
     // {
     //     $sql = "INSERT INTO `candidate_elections` ( `name`,`election_id`, `user_id` )
@@ -212,25 +213,23 @@ class Model
 
         $stmt->execute();
 
-        while( $row = $stmt->fetchAll( PDO::FETCH_ASSOC ) )
-        {
-            $data = $row;
-        }
+        $data = $stmt->fetch( PDO::FETCH_ASSOC );
 
         return $data;
     }
 
     // campaign tables
 
-    public function createCampaign( int $elections_id, int $users_id , ?string $name='campaign' ): string
+    public function createCampaign( int $elections_id, int $users_id, int $electrol_position_id, ?string $name='campaign' ): string
     {
-        $sql = "INSERT INTO `campaigns` ( `name`,`election_id`, `user_id` )
-        VALUES ( :name, :elections_id, :users_id)";
+        $sql = "INSERT INTO `campaigns` ( `name`,`election_id`, `user_id`, `electrol_position_id` )
+        VALUES ( :name, :elections_id, :users_id, :epid)";
 
         $stmt = $this->connection->prepare( $sql );
 
         $stmt->bindValue( 'elections_id', $elections_id, PDO::PARAM_INT );
         $stmt->bindValue( 'users_id', $users_id, PDO::PARAM_INT );
+        $stmt->bindValue( 'epid', $electrol_position_id, PDO::PARAM_INT );
         $stmt->bindValue( 'name', $name, PDO::PARAM_STR );
 
         $stmt->execute();
@@ -254,6 +253,23 @@ class Model
         {
             $data = $row;
         }
+
+        return $data;
+    }
+
+    public function getCampaignID( int $id ): array | false
+    {
+        $data = [];
+
+        $sql = "SELECT * FROM `campaigns` WHERE (`id` = :id)";
+
+        $stmt = $this->connection->prepare( $sql );
+
+        $stmt->bindValue( 'id', $id, PDO::PARAM_INT );
+
+        $stmt->execute();
+
+        $data = $stmt->fetch( PDO::FETCH_ASSOC );
 
         return $data;
     }
@@ -289,6 +305,40 @@ class Model
         $stmt->execute();
 
         return $stmt->rowCount();
+    }
+
+    public function checkCampaign( int $user_id, int $election_id, ?int $electrol_position_id = null, ?bool $strict = false ): array | false
+    {
+        $data = [];
+
+        if ( $electrol_position_id && $strict )
+        {
+            $sql = "SELECT * FROM `campaigns` WHERE (`user_id` = :uid AND `election_id` = :eid AND `electrol_position_id` = :epid)";
+
+            $stmt = $this->connection->prepare( $sql );
+    
+            $stmt->bindValue( 'uid', $user_id , PDO::PARAM_INT );
+            $stmt->bindValue( 'eid', $election_id , PDO::PARAM_INT );
+            $stmt->bindValue( 'epid', $electrol_position_id , PDO::PARAM_INT );
+        }
+        else 
+        {
+            $sql = "SELECT * FROM `campaigns` WHERE (`user_id` = :uid AND `election_id` = :eid)";
+
+            $stmt = $this->connection->prepare( $sql );
+    
+            $stmt->bindValue( 'uid', $user_id , PDO::PARAM_INT );
+            $stmt->bindValue( 'eid', $election_id , PDO::PARAM_INT );
+        }
+
+        $stmt->execute();
+
+        while ( $row = $stmt->fetchAll( PDO::FETCH_ASSOC ) )
+        {
+            $data = $row;
+        }
+
+        return $data;
     }
 
     // Vote Table
@@ -328,4 +378,49 @@ class Model
 
         return $data;
     }
+
+    public function getUserVotes( int $user_id, int $election_id ): array|false
+    {
+        $data = [];
+
+        $sql = "SELECT * FROM `votes` WHERE ( `user_id` = :uid AND  `election_id` = :eid )";
+
+        $stmt = $this->connection->prepare( $sql );
+
+        $stmt->bindValue( 'uid', $user_id ,PDO::PARAM_INT );
+        $stmt->bindValue( 'eid', $election_id ,PDO::PARAM_INT );
+
+        $stmt->execute();
+
+        while( $row = $stmt->fetchAll( PDO::FETCH_ASSOC ) )
+            $data = $row
+        ;
+
+        return $data;
+    }
+
+    //electrol Positions tables
+
+    public function getPositions( int $id ): array | false
+    {
+        $data = [];
+
+        $sql = "SELECT * FROM `electrol_positions` WHERE (`id` = :id)";
+
+
+        $stmt = $this->connection->prepare( $sql );
+
+        $stmt->bindValue( 'id', $id, PDO::PARAM_INT );
+
+        $stmt->execute();
+
+        while ( $row = $stmt->fetchAll( PDO::FETCH_ASSOC ) )
+        {
+            $data = $row;
+        }
+
+        return $data;
+        
+    }
+
 }

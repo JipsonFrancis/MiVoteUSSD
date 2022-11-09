@@ -1,2 +1,12 @@
-3
-333311000-10
+[
+    {
+        "id":5,
+        "electrol_positions":"[\"kings\",\"Queens\",\"Prince\",\"Princess\"]","created_at":"2022-11-08 10:08:44","updated_at":"2022-11-08 10:08:44"
+    }
+]
+
+["kings","Queens","Prince","Princess"]
+
+string
+
+["[\"kings\"","\"Queens\"","\"Prince\"","\"Princess\"]"]
